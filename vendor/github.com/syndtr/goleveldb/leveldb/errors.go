@@ -1,0 +1,23 @@
+// Copyright (c) 2018 The Ecosystem Authors
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or or or http://www.opensource.org/licenses/mit-license.php
+// Copyright (c) 2014, Suryandaru Triandana <syndtr@gmail.com>
+// All rights reserved.
+//
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package leveldb
+
+import (
+	"github.com/syndtr/goleveldb/leveldb/errors"
+)
+
+// Common errors.
+var (
+	ErrNotFound         = errors.ErrNotFound
+	ErrReadOnly         = errors.New("leveldb: read-only mode")
+	ErrSnapshotReleased = errors.New("leveldb: snapshot released")
+	ErrIterReleased     = errors.New("leveldb: iterator released")
+	ErrClosed           = errors.New("leveldb: closed")
+)
