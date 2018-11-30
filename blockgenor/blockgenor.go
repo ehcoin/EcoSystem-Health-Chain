@@ -1,7 +1,7 @@
 // Copyright (c) 2018 The Ecosystem Authors
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or or or http://www.opensource.org/licenses/mit-license.php
-package blockgenor
+package blkgenor
 
 import (
 	"github.com/ecosystem/go-ecosystem/common"
@@ -35,14 +35,14 @@ type BlockGenor struct {
 
 func New(ehc Backend) (*BlockGenor, error) {
 	if nil == &ehc {
-		log.Error("nil == &ehc Error")
+		log.Error("nil == &ehcparams Error")
 		return nil, ParaNull
 	}
 	if nil == ehc.BlockChain().Engine() {
-		log.Error("ehc.BlockChain().Engine() Error")
+		log.Error("ehcparams.BlockChain().Engine() Error")
 		return nil, ParaNull
 	}
-	//if nil==ehc.ReElection(){
+	//if nil==ehcparams.ReElection(){
 	//	return nil,ParaNull
 	//}
 
@@ -177,9 +177,9 @@ func (self *BlockGenor) leaderChangeNotifyHandle(leaderMsg *mc.LeaderChangeNotif
 
 	if leaderMsg.ConsensusState {
 		process.SetCurLeader(leaderMsg.Leader, leaderMsg.ConsensusTurn)
-		process.SetNextLeader(leaderMsg.NextLeader)
+		process.SetNextLeader(leaderMsg.Leader, leaderMsg.NextLeader)
 		if preProcess != nil {
-			preProcess.SetNextLeader(leaderMsg.Leader)
+			preProcess.SetNextLeader(leaderMsg.PreLeader, leaderMsg.Leader)
 		}
 
 		// 提前设置下个process的leader
@@ -240,7 +240,7 @@ func (self *BlockGenor) blockInsertMsgHandle(blockInsert *mc.HD_BlockInsertNotif
 
 	if number > curNumber {
 		log.INFO(self.logExtraInfo(), "+++++fetch 区块高度", number)
-		self.pm.matrix.FetcherNotify(blockInsert.Header.Hash(), blockInsert.Header.Number.Uint64())
+		self.pm.ecosystem.FetcherNotify(blockInsert.Header.Hash(), blockInsert.Header.Number.Uint64())
 		return
 	}
 
