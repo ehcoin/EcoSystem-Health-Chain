@@ -1,6 +1,6 @@
 // Copyright (c) 2018 The Ecosystem Authors
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or or or http://www.opensource.org/licenses/mit-license.php
+// file COPYING or http://www.opensource.org/licenses/mit-license.php
 package reelection
 
 import (
@@ -28,10 +28,10 @@ var (
 	*/
 
 	BroadCastInterval        = common.GetBroadcastInterval()
-	MinerTopGenTiming        = common.GetReElectionInterval() - man.MinerTopologyGenerateUpTime
-	MinerNetchangeTiming     = common.GetReElectionInterval() - man.MinerNetChangeUpTime
-	ValidatorTopGenTiming    = common.GetReElectionInterval() - man.VerifyTopologyGenerateUpTime
-	ValidatorNetChangeTiming = common.GetReElectionInterval() - man.VerifyNetChangeUpTime
+	MinerTopGenTiming        = common.GetReElectionInterval() - params.MinerTopologyGenerateUpTime
+	MinerNetchangeTiming     = common.GetReElectionInterval() - params.MinerNetChangeUpTime
+	ValidatorTopGenTiming    = common.GetReElectionInterval() - params.VerifyTopologyGenerateUpTime
+	ValidatorNetChangeTiming = common.GetReElectionInterval() - params.VerifyNetChangeUpTime
 	Time_Out_Limit           = 2 * time.Second
 	ChanSize                 = 10
 )
@@ -149,11 +149,11 @@ func (self *ReElection) update() {
 func (self *ReElection) GetTopoChange(height uint64, offline []common.Address) ([]mc.Alternative, error) {
 
 	log.INFO(Module, "获取拓扑改变 start height", height, "offline", offline)
-	//if height <= common.GetReElectionInterval() {
-		//log.Error(Module, "小于第一个选举周期返回空的拓扑差值 height", height)
+	if height <= common.GetReElectionInterval() {
+		log.Error(Module, "小于第一个选举周期返回空的拓扑差值 height", height)
 		return []mc.Alternative{}, nil
 
-	//}
+	}
 	antive, err := self.readNativeData(height - 1)
 	if err != nil {
 		log.Error(Module, "获取上一个高度的初选列表失败 height-1", height-1)
@@ -178,14 +178,12 @@ func (self *ReElection) GetTopoChange(height uint64, offline []common.Address) (
 func (self *ReElection) GetElection(height uint64) (*ElectReturnInfo, error) {
 
 	log.INFO(Module, "GetElection start height", height)
-	if common.IsReElectionNumber(height + man.MinerNetChangeUpTime) {
+	if common.IsReElectionNumber(height + params.MinerNetChangeUpTime) {
 		log.Error(Module, "是矿工网络生成切换时间点 height", height)
-		if err:=self.checkTopGenStatus(height+man.MinerNetChangeUpTime);err!=nil{
-			log.ERROR(Module,"检查top生成出错 err",err)
-		}
-		ans, _, err := self.readElectData(common.RoleMiner, height+ man.MinerNetChangeUpTime)
+		heightMiner := height
+		ans, _, err := self.readElectData(common.RoleMiner, heightMiner)
 		if err != nil {
-			log.ERROR(Module, "获取本地矿工选举信息失败", "miner", "heightminer", height+ man.MinerNetChangeUpTime)
+			log.ERROR(Module, "获取本地矿工选举信息失败", "miner", "heightminer", heightMiner)
 			return nil, err
 		}
 		resultM := &ElectReturnInfo{
@@ -193,14 +191,12 @@ func (self *ReElection) GetElection(height uint64) (*ElectReturnInfo, error) {
 			BackUpMiner: ans.BackUpMiner,
 		}
 		return resultM, nil
-	} else if common.IsReElectionNumber(height + man.VerifyNetChangeUpTime) {
+	} else if common.IsReElectionNumber(height + params.VerifyNetChangeUpTime) {
 		log.Error(Module, "是验证者网络切换时间点 height", height)
-		if err:=self.checkTopGenStatus(height+man.VerifyNetChangeUpTime);err!=nil{
-			log.ERROR(Module,"检查top生成出错 err",err)
-		}
-		_, ans, err := self.readElectData(common.RoleValidator, height+man.VerifyNetChangeUpTime)
+		heightValidator := height
+		_, ans, err := self.readElectData(common.RoleValidator, heightValidator)
 		if err != nil {
-			log.ERROR(Module, "获取本地验证者选举信息失败", "miner", "heightValidator",height+man.VerifyNetChangeUpTime)
+			log.ERROR(Module, "获取本地验证者选举信息失败", "miner", "heightValidator", heightValidator)
 			return nil, err
 		}
 		resultV := &ElectReturnInfo{
