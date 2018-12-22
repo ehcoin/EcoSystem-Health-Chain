@@ -194,11 +194,9 @@ func (p *Process) AddConsensusBlock(block *mc.BlockLocalVerifyOK) {
 }
 
 func (p *Process) processMinerResultVerify(leader common.Address, checkState bool) {
-	if checkState {
-		if p.checkState(StateMinerResultVerify) == false {
-			log.WARN(p.logExtraInfo(), "准备进行挖矿结果验证，状态错误", p.state.String())
-			return
-		}
+	if checkState && p.checkState(StateMinerResultVerify) == false {
+		log.WARN(p.logExtraInfo(), "准备进行挖矿结果验证，状态错误", p.state.String())
+		return
 	}
 
 	if common.IsBroadcastNumber(p.number) {
