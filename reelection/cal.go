@@ -111,6 +111,7 @@ func (self *ReElection) TransferToElectionStu(info *ElectReturnInfo) []common.El
 				Account: node.Account,
 				Stock:   node.Stock,
 				Type:    role,
+				VIP:     node.VIPLevel,
 			}
 
 			result = append(result, e)
@@ -126,12 +127,12 @@ func (self *ReElection) TransferToNetTopologyAllStu(info *ElectReturnInfo) *comm
 		NetTopologyData: make([]common.NetTopologyData, 0),
 	}
 
-	srcMap := make(map[common.ElectRoleType][]mc.TopologyNodeInfo)
+	srcMap := make(map[common.ElectRoleType][]mc.ElectNodeInfo)
 	srcMap[common.ElectRoleMiner] = info.MasterMiner
-	srcMap[common.ElectRoleMinerBackUp] = info.BackUpMiner
+	//srcMap[common.ElectRoleMinerBackUp] = info.BackUpMiner
 	srcMap[common.ElectRoleValidator] = info.MasterValidator
 	srcMap[common.ElectRoleValidatorBackUp] = info.BackUpValidator
-	orderIndex := []common.ElectRoleType{common.ElectRoleValidator, common.ElectRoleValidatorBackUp, common.ElectRoleMiner, common.ElectRoleMinerBackUp}
+	orderIndex := []common.ElectRoleType{common.ElectRoleMiner, common.ElectRoleValidator, common.ElectRoleValidatorBackUp}
 
 	for _, role := range orderIndex {
 		src := srcMap[role]
@@ -147,9 +148,7 @@ func (self *ReElection) TransferToNetTopologyAllStu(info *ElectReturnInfo) *comm
 	return result
 }
 
-func (self *ReElection) TransferToNetTopologyChgStu(alterInfo []mc.Alternative,
-	onlinePrimaryNods []common.Address,
-	offlinePrimaryNodes []common.Address) *common.NetTopology {
+func (self *ReElection) TransferToNetTopologyChgStu(alterInfo []mc.Alternative) *common.NetTopology {
 	result := &common.NetTopology{
 		Type:            common.NetTopoTypeChange,
 		NetTopologyData: make([]common.NetTopologyData, 0),
@@ -163,52 +162,5 @@ func (self *ReElection) TransferToNetTopologyChgStu(alterInfo []mc.Alternative,
 		result.NetTopologyData = append(result.NetTopologyData, data)
 	}
 
-	for _, onlineNode := range onlinePrimaryNods {
-		data := common.NetTopologyData{
-			Account:  onlineNode,
-			Position: common.PosOnline,
-		}
-		result.NetTopologyData = append(result.NetTopologyData, data)
-	}
-
-	for _, offlineNode := range offlinePrimaryNodes {
-		data := common.NetTopologyData{
-			Account:  offlineNode,
-			Position: common.PosOffline,
-		}
-		result.NetTopologyData = append(result.NetTopologyData, data)
-	}
 	return result
-}
-
-func (self *ReElection) paraseNetTopology(topo *common.NetTopology) ([]mc.TopologyNodeInfo, []mc.TopologyNodeInfo, []mc.TopologyNodeInfo, []mc.TopologyNodeInfo, error) {
-	if topo.Type != common.NetTopoTypeAll {
-		return nil, nil, nil, nil, errors.New("Net Topology is not all data")
-	}
-
-	MasterMiner := make([]mc.TopologyNodeInfo, 0)
-	BackUpMiner := make([]mc.TopologyNodeInfo, 0)
-	MasterValidator := make([]mc.TopologyNodeInfo, 0)
-	BackUpValidator := make([]mc.TopologyNodeInfo, 0)
-
-	for _, data := range topo.NetTopologyData {
-		node := mc.TopologyNodeInfo{
-			Account:  data.Account,
-			Position: data.Position,
-			Type:     common.GetRoleTypeFromPosition(data.Position),
-			Stock:    0,
-		}
-
-		switch node.Type {
-		case common.RoleMiner:
-			MasterMiner = append(MasterMiner, node)
-		case common.RoleBackupMiner:
-			BackUpMiner = append(BackUpMiner, node)
-		case common.RoleValidator:
-			MasterValidator = append(MasterValidator, node)
-		case common.RoleBackupValidator:
-			BackUpValidator = append(BackUpValidator, node)
-		}
-	}
-	return MasterMiner, BackUpMiner, MasterValidator, BackUpValidator, nil
 }
